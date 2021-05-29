@@ -1,0 +1,48 @@
+import gatedata as gd
+import schemdraw
+import schemdraw.elements as elm
+from schemdraw.segments import *
+from schemdraw.logic import *
+
+#path = r"C:\Users\prana\Desktop\hdl_direc\LogicGate2.hdl"
+#n = 5
+#gmatrix, wmatrix, phdl = gd.gate_data(path, n)
+
+class GenericAnd(elm.Element):
+    def __init__(self, input_wires, coor):
+        super().__init__()
+        x = coor[0]
+        y = coor[1]
+        num_inputs = len(input_wires)
+
+        # sets length and width of pins
+        io_height = 0.55
+        io_width = 0.35
+
+        height = 0.4 + (io_height * (num_inputs - 1))
+        half_height = height/2
+        box_width = half_height + 0.2
+
+        # draws and gate
+        self.segments.append(Segment([(x, y), (x, y+half_height), (x+box_width, y+half_height)]))
+        self.segments.append(Segment([(x, y), (x, y-half_height), (x+box_width, y-half_height)]))
+        self.segments.append(SegmentArc([x+box_width, y], height, height, 270, 90))
+
+        # draw output pin
+        self.segments.append(Segment([(x+box_width+half_height, y), (x+box_width+half_height+io_width, y)]))
+
+        # draw input pins
+        if num_inputs % 2 == 1:
+            shift_down = (num_inputs // 2) * io_height
+        else:
+            shift_down = (num_inputs // 2) * io_height - (io_height/2)
+
+        for i in range(0, num_inputs):
+            self.segments.append(Segment([(x - io_width, (i*io_height) - shift_down), (x, (i*io_height) - shift_down)]))
+
+
+
+d = schemdraw.Drawing()
+andgate = GenericAnd(["a", "b"], [0.35, 0])
+d.add(andgate)
+d.draw()
