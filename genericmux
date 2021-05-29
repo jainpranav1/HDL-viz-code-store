@@ -1,0 +1,86 @@
+import gatedata as gd
+import schemdraw
+import schemdraw.elements as elm
+from schemdraw.segments import *
+from schemdraw.logic import *
+
+#path = r"C:\Users\prana\Desktop\CSCE_312\P3Codes(1)\P3Codes\Pranav-Jain-727009500\TrafficController.hdl"
+#n = 5
+#gmatrix, wmatrix, phdl = gd.gate_data(path, n)
+#print(gmatrix)
+#print(phdl)
+
+def shorten_pins(pins):
+    short_pins = []
+    max_length = 4
+    for p in pins:
+        ind = p.find("[")
+
+        # if [ is present (ex. in[0:3]
+        if ind != -1:
+            name = p[0:ind]
+            if len(name) > max_length:
+                short_pins.append(p[0:max_length] + "..." + p[ind:])
+            else:
+                short_pins.append(p)
+
+        else:
+            if len(p) > max_length:
+                short_pins.append(p[0:max_length] + "...")
+            else:
+                short_pins.append(p)
+    return short_pins
+
+def mux_maker(input_pins, output_pins, coord):
+    pins1 = []
+    pins2 = []
+    input_pins.reverse()
+    output_pins.reverse()
+    for i in shorten_pins(input_pins):
+        if "sel" in i:
+            pins1.append(elm.IcPin(side="T"))
+            pins2.append(elm.IcPin(name=i, side="T"))
+        else:
+            pins1.append(elm.IcPin(name=i, side="L"))
+            pins2.append(elm.IcPin(side="L"))
+    for j in shorten_pins(output_pins):
+        pins1.append(elm.IcPin(name=j, side="R"))
+        pins2.append(elm.IcPin(side="R"))
+
+    # gate 1 is gate with only left and right pins
+    # gate 2 is gate with only top pins
+    gate1 = elm.Multiplexer(pins=pins1, edgepadH=-0.1, edgepadW=0.8, slant=30).at(coord)
+    gate2 = elm.Multiplexer(pins=pins2, edgepadH=-0.1, edgepadW=0.8, slant=30, lofst=0.45).at(coord)
+
+    return gate1, gate2
+
+
+
+
+def generic_gate_maker(name, input_pins, output_pins, coord):
+    pins = []
+    input_pins.reverse()
+    output_pins.reverse()
+    for i in shorten_pins(input_pins):
+        pins.append(elm.IcPin(name=i, side="left"))
+    for j in shorten_pins(output_pins):
+        pins.append(elm.IcPin(name=j, side="right"))
+    gate = elm.Ic(pins=pins, edgepadW=2.5, edgepadH=0.05).label(name, "top", fontsize=12).at(coord)
+    return gate
+
+
+
+d = schemdraw.Drawing()
+
+
+
+JK, AK = mux_maker(["a[0:16]", "b[0:16]", "sel"], ["out[0:16]"], [0, 0])
+MK = generic_gate_maker("And16Way", ["in1", "in2"], ["out"], [0, 10])
+
+
+
+d.add(JK)
+d.add(AK)
+d.add(MK)
+
+d.draw()
